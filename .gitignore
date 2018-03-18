@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+*.ko
 
 # Precompiled Headers
 *.gch
@@ -35,6 +36,26 @@
 *.elf
 *.hex
 *.map
+
+# Misc
+*.map
+*.m
+*.png
+
+# Eclipse CDT project files
+.cproject
+.project
+.settings/
+
+# Vagrant directory
+.vagrant/
+
+# Include makefiles
+!Makefile
+*~
+
+# Libraries
+/lib
 
 # Other extensions
 *.pdf
