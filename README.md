@@ -1,5 +1,4 @@
 # KettleIoT
----
 ## Overview
 
 ## Description
