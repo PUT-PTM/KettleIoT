@@ -12,7 +12,6 @@
 #include "stm32f4_discovery.h"
 #include "math.h"
 
-
 void setOutPP(char port, int number)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
