@@ -59,3 +59,4 @@
 
 # Other extensions
 *.pdf
+/Debug/
