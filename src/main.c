@@ -12,6 +12,13 @@
 #include "stm32f4_discovery.h"
 #include "math.h"
 
+#define MaxMsgSize 64
+/* ----global variables---- */
+char recvUARTmsg[MaxMsgSize] = {0};
+uint8_t recvUARTmsgPos = 0;
+/* ------declarations------ */
+uint16_t lengthOfString(char *);
+
 void setOutPP(char port, int number)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
@@ -2578,23 +2585,155 @@ void EXTI1_IRQHandler(void)
 		EXTI_ClearITPendingBit(EXTI_Line1);
    	}
 }
-void USART3_IRQHandler(void)
-{
+//void USART3_IRQHandler(void)
+//{
+//
+//	//czekaj na opró¿nienie bufora wyjœciowego
+//	while(USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET);
+//	// wyslanie danych
+//	USART_SendData(USART3, 'A');
+//	// czekaj az dane zostana wyslane
+//	while (USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);
+//
+//
+//	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
+//    {
+//		// odebrany bajt znajduje sie w rejestrze USART3->DR
+//	}
+//}
+/* UART interrupt handler (message receiving) */
+void USART3_IRQHandler(void){
 
-	//czekaj na opró¿nienie bufora wyjœciowego
-	while(USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET);
-	// wyslanie danych
-	USART_SendData(USART3, 'A');
-	// czekaj az dane zostana wyslane
-	while (USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);
+	uint16_t buff = 0;
 
+	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET){
 
-	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
-    {
-		// odebrany bajt znajduje sie w rejestrze USART3->DR
+		//put received UART sign to recvUARTmsg
+		buff = USART3->DR;
+		recvUARTmsg[recvUARTmsgPos] = (char)buff;
+
+		//if last read char is \n then handle whole message
+		if(buff == '\n'){
+			//message handler
+			handleMessage(recvUARTmsg);
+
+			//message buffer flasher
+			recvUARTmsgFlush();
+		} else {
+			//increase recvUARTmsg position
+			recvUARTmsgPos++;
+		}
+	}
+}
+/* UART received message handler */
+void handleMessage(char *msg){
+	char tempInp1[1] = {0};
+	char tempInp2[1] = {0};
+	int inp1 = 0;
+	int inp2 = 0;
+	uint16_t lenOfMsg = lengthOfString(msg);
+
+	delay(5);
+	if(strstr(msg, "getStatus()") != NULL){
+		getStatus();
+	}
+	else if(strstr(msg, "setStatus(") != NULL){
+		//learning the states from msg
+		tempInp1[0] = msg[lenOfMsg-5];
+		tempInp2[0] = msg[lenOfMsg-4];
+		inp1 = atoi(tempInp1);
+		inp2 = atoi(tempInp2);
+
+		setStatus(inp1, inp2);
+	}
+}
+/* Flushing UART receiving buffer [NOT USED IN THIS VERSION] */
+void recvUARTmsgFlush(){
+	//clear recvUARTmsg[]
+	for(uint8_t i = 0; i<MaxMsgSize; i++){
+		recvUARTmsg[i] = 0;
+	}
+
+	//moving cursor back to position zero
+	recvUARTmsgPos = 0;
+}
+/* Delays inside */
+void delay(volatile uint32_t s){
+	s *= 24;
+	while(s--);
+}
+void initESP(void){
+	delay(10);
+	sendUARTmsg("AT\r\n");
+	delay(100);
+}
+void sendUARTmsg(char msg[MaxMsgSize]){
+	for(uint8_t i=0; msg[i] != '\0'; i++){
+		USART_SendData(USART3, msg[i]);
+		delay(500);
+	}
+}
+/* Returns length of given string in chars [NOT USED IN THIS VERSION]*/
+uint16_t lengthOfString(char *str){
+	uint16_t NOsigns = 0;
+	while(str[NOsigns] != '\n'){
+		NOsigns++;
+	}
+	return (NOsigns+1);
+}
+
+/* Sends current sockets' status via WiFi */
+void getStatus(){
+	if(!GPIO_ReadOutputDataBit(GPIOE, GPIO_Pin_12)){
+		if(!GPIO_ReadOutputDataBit(GPIOE, GPIO_Pin_13)){
+			sendUARTmsg("AT+CIPSEND=0,3\r\n");
+			delay(10);
+			sendUARTmsg("11\n");
+		}
+		else{
+			sendUARTmsg("AT+CIPSEND=0,3\r\n");
+			delay(10);
+			sendUARTmsg("10\n");
+		}
+	}
+	else{
+		if(!GPIO_ReadOutputDataBit(GPIOE, GPIO_Pin_13)){
+			sendUARTmsg("AT+CIPSEND=0,3\r\n");
+			delay(10);
+			sendUARTmsg("01\n");
+		}
+		else{
+			sendUARTmsg("AT+CIPSEND=0,3\r\n");
+			delay(10);
+			sendUARTmsg("00\n");
+		}
 	}
 }
 
+/* Something does not work here (minor error with casting probably) */
+void setStatus(uint8_t input1, uint8_t input2){
+	if(input1){
+		sendUARTmsg("AT+CIPSEND=0,19\r\n");
+		delay(10);
+		sendUARTmsg("1st socket toggled\n");
+
+		//toggle bit
+		GPIO_ToggleBits(GPIOE, GPIO_Pin_12);
+	}
+	if(input2){
+		sendUARTmsg("AT+CIPSEND=0,19\r\n");
+		delay(10);
+		sendUARTmsg("2nd socket toggled\n");
+
+		//toggle bit
+		GPIO_ToggleBits(GPIOE, GPIO_Pin_13);
+	}
+
+	//Send status after switching
+//	delay(100);
+//	getStatus();
+
+}
 //schemat polaczeniowy dla wyswietlacza
 
 /*char AdoHchar[8] = {'E', 'E', 'E', 'E', 'E', 'E', 'E', 'B'};
@@ -2614,7 +2753,10 @@ int main(void)
 	setInUp('A', 1);
 	setOutPP('E', 1);
 	setOutPP('D', 12);
+	setBit('D',12);
 
+	setupUSART();
+	initESP();
 	for(;;){
 
 		if(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1))
