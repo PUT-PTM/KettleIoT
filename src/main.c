@@ -2605,18 +2605,37 @@ void EXTI1_IRQHandler(void)
 /*************************************/
 uint8_t digital_out_1 = 0; //on-off
 
+char alarm[5]="12:00";
+char hold[5]="15:15";
+float temp=90.2;
+int setting=0;
+float currTemp=48.5;
+char is_connected[5]="true";
+char is_heating[5]="false";
+
 /*************************************/
 //all possible get requests listed here
 const char get_index[]="GET /index.html";
 const char get_root[]="GET / ";
-const  char get_toggle_digitalOut[]={"GET /digital_outputs/toggle"};
-const  char get_status_dig_out[]={"GET /digital_outputs/status"};
+const char get_ustawienia[] = "GET /example.json";
+const char set[]="GET /set";
+
+//const  char get_toggle_digitalOut[]={"GET /digital_outputs/toggle"};
+//const  char get_status_dig_out[]={"GET /digital_outputs/status"};
 //const char get_on[]="GET /on ";
 /*************************************/
 
 //const char index_html[]="<!DOCTYPE html>\n<html>\n<head></head>\n<body>\n<p>\n<a href=\" /on\"><button class=\"button\">ON</button></a>\n</p>\n</body>\n</html>";
-const char index_html[]={"<!DOCTYPE html>\n<html>\n<head>\n<title>esp</title>\n<script src=https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js></script>\n<script>$(document).ready(function(){setInterval(\"getDigitalOutputsStatus()\",4000)});function digital_output_toggle(b){var a=\"/digital_outputs/toggle?pin=\"+b+\"&\"+Math.floor(Math.random()*100000);$.ajax({type:\"GET\",dataType:\"text\",url:a,success:function(c){if(c==\"1\"){$(\"#\"+b).html(\"OFF\")}else{if(c==\"0\"){$(\"#\"+b).html(\"ON\")}else{alert(\"could not toggle digital output\")}}},timeout:2000})}function getDigitalOutputsStatus(){var b=\"/digital_outputs/status?\"+Math.floor(Math.random()*10000000);$.ajax({type:\"GET\",dataType:\"json\",url:b,success:function(a){if(a.digital_outputs.dout1[\"state\"]==1){$(\"#dout1\").html(\"OFF\")}else{$(\"#dout1\").html(\"ON\")}},timeout:2000})};</script>\n</head>\n<body>\n<header>\n<h1>KettleIoT</h1>\n</header>\n<section>\n<table>\n<tr>\n<th>Digital Ouput</th>\n<th>Option</th>\n</tr>\n<tr>\n<td>DOut1</td>\n<td><button id=dout1 class=button onclick=\"digital_output_toggle('dout1')\">ON</button>\n</td>\n</tr>\n</table>\n</section>\n</body>\n</html>\n"};
+//const char index_html[]={"<!DOCTYPE html>\n<html>\n<head>\n<title>esp</title>\n<script src=https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js></script>\n<script>$(document).ready(function(){setInterval(\"getDigitalOutputsStatus()\",4000)});function digital_output_toggle(b){var a=\"/digital_outputs/toggle?pin=\"+b+\"&\"+Math.floor(Math.random()*100000);$.ajax({type:\"GET\",dataType:\"text\",url:a,success:function(c){if(c==\"1\"){$(\"#\"+b).html(\"OFF\")}else{if(c==\"0\"){$(\"#\"+b).html(\"ON\")}else{alert(\"could not toggle digital output\")}}},timeout:2000})}function getDigitalOutputsStatus(){var b=\"/digital_outputs/status?\"+Math.floor(Math.random()*10000000);$.ajax({type:\"GET\",dataType:\"json\",url:b,success:function(a){if(a.digital_outputs.dout1[\"state\"]==1){$(\"#dout1\").html(\"OFF\")}else{$(\"#dout1\").html(\"ON\")}},timeout:2000})};</script>\n</head>\n<body>\n<header>\n<h1>KettleIoT</h1>\n</header>\n<section>\n<table>\n<tr>\n<th>Digital Ouput</th>\n<th>Option</th>\n</tr>\n<tr>\n<td>DOut1</td>\n<td><button id=dout1 class=button onclick=\"digital_output_toggle('dout1')\">ON</button>\n</td>\n</tr>\n</table>\n</section>\n</body>\n</html>\n"};
+//ok
+//const char index_html[]={"<html><head><title>KettleIoT</title><meta charset=\"UTF-8\"><style>body{background:rgb(11,9,10);color:rgb(255,255,255);text-align:center;margin:20px 0 0 0;min-width:1000px;}.margins{width:900px;display:inline-block;text-align:left;margin:0;}#title{text-align:center;font-family:'Times New Roman',serif;font-size:36px;font-weight:bold;margin-bottom:40px;margin-top:30px;}.container{background:rgb(235,235,235);margin-top:15px;text-align:center;padding:10px;color:rgb(0,0,0);}.container .title{font-size:18px;font-family:'Times New Roman', serif;color:rgb(0,0,0);margin-bottom:5px;}.container div{text-align:center;}.container .save{text-align:right;}#screen{background:rgba(0,0,0,0.9);color:rgb(255,255,255);z-index:100;position:fixed;width:100%;height:100%;top:0;left:0;cursor:pointer;}#screen_text{font-size:26px;margin-top:calc(50vh - 30px);}</style><script src=http://code.jquery.com/jquery.min.js></script><script>function komunikat(tekst){$(\"#screen_text\").html(tekst);$(\"#screen\").show(300);setTimeout(function () {$(\"#screen\").hide(300);}, 2000);}function licztemp(){var el = document.getElementById(\"temperatura\");var el2 = document.getElementById(\"wynik_temp\");var temp = parseFloat(el.value);temp = temp.toFixed(1);el2.innerHTML = temp.toString() + \" &deg;C\";}function loadSettings(){$.get(\"example.json\", function(data){var dane = JSON.parse(data);$(\"#temperatura\").val(dane[\"temp\"]);licztemp();$(\"#alarm\").val(dane[\"alarm\"]);$(\"#hold\").val(dane[\"hold\"]);if(dane[\"setting\"] === 0){$(\"#tryb1\").prop(\"checked\", true);}else{$(\"#tryb2\").prop(\"checked\", true);}setInterval(function () {intervalSetting();}, 4000);});}function intervalSetting(){$.get(\"example.json\", function(data){var dane = JSON.parse(data);$(\"#curr_temp\").html(dane[\"curr_temp\"].toString() + \" &deg;C\");if(dane[\"is_connected\"] === true){$(\"#is_connected\").html(\"Czajnik jest podłączony\");$(\"#curr_temp\").show(300);$(\"#is_heating\").show(300);}else{$(\"#is_connected\").html(\"Czajnik jest odłączony\");$(\"#curr_temp\").hide(300);$(\"#is_heating\").hide(300);}if(dane[\"is_heating\"] === true){$(\"#is_heating\").html(\"Trwa podgrzewanie\");}else{$(\"#is_heating\").html(\"Woda podgrzana\");}});}function saveTemp(){$.get(\"set\", {\"temp\":$(\"#temperatura\").val()}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}});}function saveAlarm(){var wartosc = \"\";if($(\"#alarm\").val() === \"\"){wartosc = \"none\";}else{wartosc = $(\"#alarm\").val();}$.get(\"set\", {\"alarm\":wartosc}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}})}function saveHold(){var wartosc = \"\";if($(\"#hold\").val() === \"\"){wartosc = \"none\";}else{wartosc = $(\"#hold\").val();}$.get(\"index.html/set\", {\"hold\":wartosc}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}})}function saveSetting(){var wartosc = \"\";if($(\"#tryb1\").is(\"checked\")){wartosc = 0;}else{wartosc = 1;}$.get(\"set\", {\"setting\":wartosc}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}})}$(document).ready(function () {loadSettings();$(\"#screen\").hide();});</script></head><body><div id=screen onclick=\"$(this).hide(300);\"><div id=screen_text>Czajnik nie jest podłączony</div></div><div class=margins><div id=content><div id=title>KettleIoT</div><div class=container><div class=title>Podtrzymywana temperatura</div><div class=setting><div style=\"width:800px; display:inline-block\"><div style=\"float:left;margin-right:5px;margin-left:3px;\">40</div><input type=\"range\" min=\"40\" max=\"100\" step=\"0.1\" id=temperatura oninput=\"licztemp()\" style=\"float:left;width:calc(100% - 62px);\"><div style=\"float:left;margin-left:5px;\">100</div><div style=\"clear:both;font-size:0;width:0;\">&nbsp;</div></div><div id=wynik_temp></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveTemp()\"></div><script>licztemp();</script></div></div><div class=container><div class=title>Godzina zagotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=alarm></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveAlarm()\"></div></div></div><div class=container><div class=title>Czas podtrzymywania temperatury</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=hold></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveHold()\"></div></div></div><div class=container><div class=title>Tryb gotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb1\" id=tryb1><span>Najpier zagotuj, a później podtrzymuj temperaturę</span><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb2\" id=tryb2><span>Po prostu podtrzymuj temperaturę</span></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveSetting()\"></div></div></div><div class=container><div class=title>Stan czajnika</div><div class=setting><div style=\"width:800px; display:inline-block\"><div id=curr_temp style=\"font-size:25px;\">Ładowanie...</div><div id=is_connected>Ładowanie...</div><div id=is_heating>Ładowanie...</div></div></div></div></div></div></body></html>"};
 
+//ok
+//const char index_html[]={"<html><head><title>KettleIoT</title><meta charset=\"UTF-8\"><style>body{background:rgb(11,9,10);color:rgb(255,255,255);text-align:center;margin:20px 0 0 0;min-width:1000px;}.margins{width:900px;display:inline-block;text-align:left;margin:0;}#title{text-align:center;font-family:'Times New Roman',serif;font-size:36px;font-weight:bold;margin-bottom:40px;margin-top:30px;}.container{background:rgb(235,235,235);margin-top:15px;text-align:center;padding:10px;color:rgb(0,0,0);}.container .title{font-size:18px;font-family:'Times New Roman', serif;color:rgb(0,0,0);margin-bottom:5px;}.container div{text-align:center;}.container .save{text-align:right;}#screen{background:rgba(0,0,0,0.9);color:rgb(255,255,255);z-index:100;position:fixed;width:100%;height:100%;top:0;left:0;cursor:pointer;}#screen_text{font-size:26px;margin-top:calc(50vh - 30px);}</style><script src=http://code.jquery.com/jquery.min.js></script><script>function komunikat(tekst){$(\"#screen_text\").html(tekst);$(\"#screen\").show(300);setTimeout(function () {$(\"#screen\").hide(300);}, 2000);}function licztemp(){var el = document.getElementById(\"temperatura\");var el2 = document.getElementById(\"wynik_temp\");var temp = parseFloat(el.value);temp = temp.toFixed(1);el2.innerHTML = temp.toString() + \" &deg;C\";}function loadSettings(){$.get(\"ustawienia.html\", function(data){var dane = JSON.parse(data);$(\"#temperatura\").val(dane[\"temp\"]);licztemp();$(\"#alarm\").val(dane[\"alarm\"]);$(\"#hold\").val(dane[\"hold\"]);if(dane[\"setting\"] === 0){$(\"#tryb1\").prop(\"checked\", true);}else{$(\"#tryb2\").prop(\"checked\", true);}setInterval(function () {intervalSetting();}, 4000);});}function intervalSetting(){$.get(\"ustawienia.html\", function(data){var dane = JSON.parse(data);$(\"#curr_temp\").html(dane[\"curr_temp\"].toString() + \" &deg;C\");if(dane[\"is_connected\"] === true){$(\"#is_connected\").html(\"Czajnik jest podłączony\");$(\"#curr_temp\").show(300);$(\"#is_heating\").show(300);}else{$(\"#is_connected\").html(\"Czajnik jest odłączony\");$(\"#curr_temp\").hide(300);$(\"#is_heating\").hide(300);}if(dane[\"is_heating\"] === true){$(\"#is_heating\").html(\"Trwa podgrzewanie\");}else{$(\"#is_heating\").html(\"Woda podgrzana\");}});}function saveTemp(){$.get(\"set\", {\"temp\":$(\"#temperatura\").val()}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}});}function saveAlarm(){var wartosc = \"\";if($(\"#alarm\").val() === \"\"){wartosc = \"none\";}else{wartosc = $(\"#alarm\").val();}$.get(\"set\", {\"alarm\":wartosc+'&'}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}})}function saveHold(){var wartosc = \"\";if($(\"#hold\").val() === \"\"){wartosc = \"none\";}else{wartosc = $(\"#hold\").val();}$.get(\"set\", {\"hold\":wartosc}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}})}function saveSetting(){var wartosc = \"\";if($(\"#tryb1\").is(\"checked\")){wartosc = 0;}else{wartosc = 1;}$.get(\"set\", {\"setting\":wartosc}, function (dane) {if(dane === \"ok\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}})}$(document).ready(function () {loadSettings();$(\"#screen\").hide();});</script></head><body><div id=screen onclick=\"$(this).hide(300);\"><div id=screen_text>Czajnik nie jest podłączony</div></div><div class=margins><div id=content><div id=title>KettleIoT</div><div class=container><div class=title>Podtrzymywana temperatura</div><div class=setting><div style=\"width:800px; display:inline-block\"><div style=\"float:left;margin-right:5px;margin-left:3px;\">40</div><input type=\"range\" min=\"40\" max=\"100\" step=\"0.1\" id=temperatura oninput=\"licztemp()\" style=\"float:left;width:calc(100% - 62px);\"><div style=\"float:left;margin-left:5px;\">100</div><div style=\"clear:both;font-size:0;width:0;\">&nbsp;</div></div><div id=wynik_temp></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveTemp()\"></div><script>licztemp();</script></div></div><div class=container><div class=title>Godzina zagotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=alarm></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveAlarm()\"></div></div></div><div class=container><div class=title>Czas podtrzymywania temperatury</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=hold></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveHold()\"></div></div></div><div class=container><div class=title>Tryb gotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb1\" id=tryb1><span>Najpier zagotuj, a później podtrzymuj temperaturę</span><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb2\" id=tryb2><span>Po prostu podtrzymuj temperaturę</span></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveSetting()\"></div></div></div><div class=container><div class=title>Stan czajnika</div><div class=setting><div style=\"width:800px; display:inline-block\"><div id=curr_temp style=\"font-size:25px;\">Ładowanie...</div><div id=is_connected>Ładowanie...</div><div id=is_heating>Ładowanie...</div></div></div></div></div></div></body></html>"};
+
+//const char index_html[]={"<html><head><title>KettleIoT</title><meta charset=\"UTF-8\"><style>body{background:rgb(11,9,10);color:rgb(255,255,255);text-align:center;margin:20px 0 0 0;min-width:1000px;}.margins{width:900px;display:inline-block;text-align:left;margin:0;}#title{text-align:center;font-family:'Times New Roman',serif;font-size:36px;font-weight:bold;margin-bottom:40px;margin-top:30px;}.container{background:rgb(235,235,235);margin-top:15px;text-align:center;padding:10px;color:rgb(0,0,0);}.container .title{font-size:18px;font-family:'Times New Roman', serif;color:rgb(0,0,0);margin-bottom:5px;}.container div{text-align:center;}.container .save{text-align:right;}#screen{background:rgba(0,0,0,0.9);color:rgb(255,255,255);z-index:100;position:fixed;width:100%;height:100%;top:0;left:0;cursor:pointer;}#screen_text{font-size:26px;margin-top:calc(50vh - 30px);}</style><script src=http://code.jquery.com/jquery.min.js></script><script>function komunikat(tekst){$(\"#screen_text\").html(tekst);$(\"#screen\").show(300);setTimeout(function() {$(\"#screen\").hide(300);}, 2000);}function licztemp(){var el = document.getElementById(\"temperatura\");var el2 = document.getElementById(\"wynik_temp\");var temp = parseFloat(el.value);temp = temp.toFixed(1);el2.innerHTML = temp.toString() + \" &deg;C\";}function loadSettings(){$.get(\"ustawienia\", function(data){var dane = JSON.parse(data);$(\"#temperatura\").val(dane[\"temp\"]);licztemp();$(\"#alarm\").val(dane[\"alarm\"]);$(\"#hold\").val(dane[\"hold\"]);if(dane[\"setting\"] === 0){$(\"#tryb1\").prop(\"checked\", true);}else{$(\"#tryb2\").prop(\"checked\", true);}setInterval(function () {intervalSetting();}, 4000);});}function intervalSetting(){$.get(\"ustawienia\", function(data){var dane = JSON.parse(data);$(\"#curr_temp\").html(dane[\"curr_temp\"].toString() + \" &deg;C\");if(dane[\"is_connected\"] === true){$(\"#is_connected\").html(\"Czajnik jest podłączony\");$(\"#curr_temp\").show(300);$(\"#is_heating\").show(300);}else{$(\"#is_connected\").html(\"Czajnik jest odłączony\");$(\"#curr_temp\").hide(300);$(\"#is_heating\").hide(300);}if(dane[\"is_heating\"] === true){$(\"#is_heating\").html(\"Trwa podgrzewanie\");}else{$(\"#is_heating\").html(\"Woda podgrzana\");}});}function saveTemp(){var a = \"/set?temp=\"+$(\"#temperatura\").val();$.ajax({type:\"GET\",dataType:\"text\",url:a,success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}},timeout:2000});}function saveAlarm(){var a=\"/set?alarm=\";if($(\"#alarm\").val()===\"\"){a+=\"none&\";}else{a+=$(\"#alarm\").val()+\"&\";}$.ajax({type:\"GET\",dataType:\"text\",url:a,success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}},timeout:2000});}function saveHold(){var a=\"/set?hold=\";var wartosc = \"\";if($(\"#hold\").val()===\"\"){a+=\"none&\";}else{a+=$(\"#hold\").val()+\"&\";}$.ajax({type:\"GET\",dataType:\"text\",url:a,success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}},timeout:2000});}function saveSetting(){var a=\"/set?setting=\";if($('input[name=\"tryb_gotowania\"]').prop(\"checked\")){a+=0;}else{a+=1;}$.ajax({type:\"GET\",dataType:\"text\",url:a,success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}},timeout:2000});}$(document).ready(function(){loadSettings();$(\"#screen\").hide();});</script></head><body><div id=screen onclick=\"$(this).hide(300);\"><div id=screen_text>Czajnik nie jest podłączony</div></div><div class=margins><div id=content><div id=title>KettleIoT</div><div class=container><div class=title>Podtrzymywana temperatura</div><div class=setting><div style=\"width:800px; display:inline-block\"><div style=\"float:left;margin-right:5px;margin-left:3px;\">40</div><input type=\"range\" min=\"40\" max=\"100\" step=\"0.1\" id=temperatura oninput=\"licztemp()\" style=\"float:left;width:calc(100% - 62px);\"><div style=\"float:left;margin-left:5px;\">100</div><div style=\"clear:both;font-size:0;width:0;\">&nbsp;</div></div><div id=wynik_temp></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveTemp()\"></div><script>licztemp();</script></div></div><div class=container><div class=title>Godzina zagotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=alarm></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveAlarm()\"></div></div></div><div class=container><div class=title>Czas podtrzymywania temperatury</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=hold></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveHold()\"></div></div></div><div class=container><div class=title>Tryb gotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb1\" id=tryb1><span>Najpier zagotuj, a później podtrzymuj temperaturę</span><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb2\" id=tryb2><span>Po prostu podtrzymuj temperaturę</span></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveSetting()\"></div></div></div><div class=container><div class=title>Stan czajnika</div><div class=setting><div style=\"width:800px; display:inline-block\"><div id=curr_temp style=\"font-size:25px;\">Ładowanie...</div><div id=is_connected>Ładowanie...</div><div id=is_heating>Ładowanie...</div></div></div></div></div></div></body></html>"};
+
+const char index_html[]={"<html><head><title>KettleIoT</title><meta charset=\"UTF-8\"><style>body{background:rgb(11,9,10);color:rgb(255,255,255);text-align:center;margin:20px 0 0 0;min-width:1000px;}.margins{width:900px;display:inline-block;text-align:left;margin:0;}#title{text-align:center;font-family:'Times New Roman',serif;font-size:36px;font-weight:bold;margin-bottom:40px;margin-top:30px;}.container{background:rgb(235,235,235);margin-top:15px;text-align:center;padding:10px;color:rgb(0,0,0);}.container .title{font-size:18px;font-family:'Times New Roman', serif;color:rgb(0,0,0);margin-bottom:5px;}.container div{text-align:center;}.container .save{text-align:right;}#screen{background:rgba(0,0,0,0.9);color:rgb(255,255,255);z-index:100;position:fixed;width:100%;height:100%;top:0;left:0;cursor:pointer;}#screen_text{font-size:26px;margin-top:calc(50vh - 30px);}</style><script src=http://code.jquery.com/jquery.min.js></script><script>function komunikat(tekst){$(\"#screen_text\").html(tekst);$(\"#screen\").show(300);setTimeout(function(){$(\"#screen\").hide(300);}, 2000);}function licztemp(){var el = document.getElementById(\"temperatura\");var el2 = document.getElementById(\"wynik_temp\");var temp = parseFloat(el.value);temp = temp.toFixed(1);el2.innerHTML = temp.toString() + \" &deg;C\";}function loadSettings(){$.getJSON(\"example.json&\",function(json) {$(\"#temperatura\").val(json.temp);licztemp();$(\"#alarm\").val(json.alarm);$(\"#hold\").val(json.hold);if(json.setting===0){$(\"#tryb1\").prop(\"checked\", true);}else{$(\"#tryb2\").prop(\"checked\", true);}setTimeout(function() {intervalSetting();}, 1000); }).error(function() { console.log(\"error: loadSettings\"); });}function intervalSetting(){var a=\"example.json&\";$.ajax({type:\"GET\",dataType:\"json\",url:a,timeout:4000,error: function(xmlhttprequest, textstatus, message){if(textstatus===\"timeout\") {console.log(\"error: intervalSetting\");clearInterval(intervalSetting);}},success:function(c){console.log(\"success\",c);$(\"#curr_temp\").html(c[\"curr_temp\"].toString()+\" &deg;C\");if(c[\"is_connected\"]===true){$(\"#is_connected\").html(\"Czajnik jest podłączony\");$(\"#curr_temp\").show(300);$(\"#is_heating\").show(300);}else{$(\"#is_connected\").html(\"Czajnik jest odłączony\");$(\"#curr_temp\").hide(300);$(\"#is_heating\").hide(300);}if(c[\"is_heating\"]===true){$(\"#is_heating\").html(\"Trwa podgrzewanie\");}else{$(\"#is_heating\").html(\"Woda podgrzana\");}},complete:function(data){console.log(\"complete\",data);setTimeout(intervalSetting,1000);}});}function saveTemp(){var a=\"/set?temp=\"+$(\"#temperatura\").val()+\"&\";$.ajax({type:\"GET\",dataType:\"text\",url:a,error: function(xmlhttprequest, textstatus, message){console.log(\"got timeout: saveTemp\");},success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}}});}function saveAlarm(){var a=\"/set?alarm=\";if($(\"#alarm\").val()===\"\"){a+=\"none&\";}else{a+=$(\"#alarm\").val()+\"&\";}$.ajax({type:\"GET\",dataType:\"text\",url:a,error: function(){console.log(\"error: saveAlarm\");},success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}}});}function saveHold(){var a=\"/set?hold=\";if($(\"#hold\").val()===\"\"){a+=\"none&\";}else{a+=$(\"#hold\").val()+\"&\";}$.ajax({type:\"GET\",dataType:\"text\",url:a,error: function(){console.log(\"error: saveHold\");},success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}}});}function saveSetting(){var a=\"/set?setting=\";if($('input[name=\"tryb_gotowania\"]').prop(\"checked\")){a+=0;}else{a+=1;}a+=\"&\";$.ajax({type:\"GET\",dataType:\"text\",url:a,error: function(){console.log(\"error: saveSetting\");},success:function(c){if(c===\"OK\"){komunikat(\"Zapisano\");}else{komunikat(\"Wystąpił błąd\");}}});}$(document).ready(function () {loadSettings();$(\"#screen\").hide();});</script></head><body><div id=screen onclick=\"$(this).hide(300);\"><div id=screen_text>Czajnik nie jest podłączony</div></div><div class=margins><div id=content><div id=title>KettleIoT</div><div class=container><div class=title>Podtrzymywana temperatura</div><div class=setting><div style=\"width:800px; display:inline-block\"><div style=\"float:left;margin-right:5px;margin-left:3px;\">40</div><input type=\"range\" min=\"40\" max=\"100\" step=\"0.1\" id=temperatura oninput=\"licztemp()\" style=\"float:left;width:calc(100% - 62px);\"><div style=\"float:left;margin-left:5px;\">100</div><div style=\"clear:both;font-size:0;width:0;\">&nbsp;</div></div><div id=wynik_temp></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveTemp()\"></div><script>licztemp();</script></div></div><div class=container><div class=title>Godzina zagotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=alarm></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveAlarm()\"></div></div></div><div class=container><div class=title>Czas podtrzymywania temperatury</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"time\" id=hold></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveHold()\"></div></div></div><div class=container><div class=title>Tryb gotowania wody</div><div class=setting><div style=\"width:800px; display:inline-block\"><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb1\" id=tryb1><span>Najpier zagotuj, a później podtrzymuj temperaturę</span><input type=\"radio\" name=\"tryb_gotowania\" value=\"tryb2\" id=tryb2><span>Po prostu podtrzymuj temperaturę</span></div><div class=save><input type=\"submit\" value=\"Zapisz\" onclick=\"saveSetting()\"></div></div></div><div class=container><div class=title>Stan czajnika</div><div class=setting><div style=\"width:800px; display:inline-block\"><div id=curr_temp style=\"font-size:25px;\">Ładowanie...</div><div id=is_connected>Ładowanie...</div><div id=is_heating>Ładowanie...</div></div></div></div></div></div></body></html>"};
 
 
 /************global variables************/
@@ -2644,6 +2663,7 @@ char* codetxt_to_ramtxt(const char* ctxt){
 }
 /***********************************/
 char toggleOutput(char* pinName);
+void toggleSettings(char *buff,char *set, char* val);
 /**************function declarations*****************/
 
 void initializeEspAsServer(void);
@@ -2693,7 +2713,39 @@ char toggleOutput(char* pinName)
 //    }
     else return 2;
 }
+void toggleSettings(char *buff,char *set, char* val)
+{
+	//char alarm[5]="12:00";
+	//char hold[5]="15:15";
+	//float temp=90.2;
+	//int setting=0;
+	if(strcmp(set,codetxt_to_ramtxt("temp"))==0) {
+		temp=(float)atof(val);
+		strcpy(buff,"OK");
+		//strcat(buff,"OK");
+	}
+	else if(strcmp(set,codetxt_to_ramtxt("alarm"))==0) {
+		strcpy(alarm,val);
+		//alarm=val;
+		//strcpy(buff,alarm);
+		//sprintf(buff,"{\"alarm\":\"%s\"}",alarm);
+		strcpy(buff,"OK");
+	}
+	else if(strcmp(set,codetxt_to_ramtxt("hold"))==0) {
+		strcpy(hold,val);
+		//hold=val;
+		//strcpy(buff,hold);
+		//sprintf(buff,"{\"hold\":\"%s\"}",hold);
+		strcpy(buff,"OK");
+	}
+	else if(strcmp(set,codetxt_to_ramtxt("setting"))==0) {
+		//scanf(val,"%d",&setting);
+		setting=(int)atoi(val);
+		//sprintf(buff,"{\"setting\":%d}",setting);
+		strcpy(buff,"OK");
 
+	}
+}
 void resetEspRxBuffer(void)
 {
     bufferIndexPrimary=0;
@@ -2735,12 +2787,11 @@ void processReqLine(char * stringToProcess)
     char idField;
     char* token;
     char field[10],value[10];
-    char someBuffer[100];
+    char someBuffer[300];
     char tempPinState[2]={0x00};
     //char token[60];
     //unsigned int ipdLen;
     //sscanf(webdata,"%c,%d:%s", idField, &ipdLen, token);
-
     token=strtok(stringToProcess,",:");//token=id
     if(token!=NULL)
     {
@@ -2750,7 +2801,7 @@ void processReqLine(char * stringToProcess)
     if(token!=NULL)
     {
         //lengthField=atoi(token);
-        token=strtok(NULL,",:");//this is get request
+        token=strtok(NULL,",&");//this is get request
     }
     if(token!=NULL)
     {
@@ -2780,26 +2831,44 @@ void processReqLine(char * stringToProcess)
 //        {
 //            sendRequestedPageToClient(idField,style_css,1192);
 //        }
-        else if(strncmp(token,codetxt_to_ramtxt(get_toggle_digitalOut),strlen(codetxt_to_ramtxt(get_toggle_digitalOut)))==0)
+        else if(strncmp(token,codetxt_to_ramtxt(get_ustawienia),strlen(codetxt_to_ramtxt(get_ustawienia)))==0)
         {
-            extractQueryFieldValue(token,field,value);
-            //GET /digital_outputs/toggle?pin=dout1&852
-            //field -> pin
-            //value -> dout1
-            if(value!=NULL)
-            {
-                char stateOfPin=toggleOutput(value);
-                tempPinState[0]=stateOfPin+48;
-                strcpy(someBuffer,tempPinState);
-                sendRequestedPageToClient(idField,someBuffer,strlen(someBuffer));
-            }
-        }
-        //adam
-        else if(strncmp(token,codetxt_to_ramtxt(get_status_dig_out),strlen(codetxt_to_ramtxt(get_status_dig_out)))==0) { //index page requested?
         	GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
-        	composeDigitalOutStatus(someBuffer);
-            sendRequestedPageToClient(idField,someBuffer,strlen(someBuffer));
+        	composeKettleStatus(someBuffer);
+        	sendRequestedPageToClient(idField,someBuffer,strlen(someBuffer));
         }
+        else if(strncmp(token,codetxt_to_ramtxt(set),strlen(codetxt_to_ramtxt(set)))==0)
+        {
+        	//+IPD,4,329:GET /set?temp=71.6 HTTP/1.1
+        	//+IPD,4,329:GET /ustawienia HTTP/1.1
+			extractQueryFieldValue(token,field,value);
+        	GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
+        	if(value!=NULL)
+        	{
+        		toggleSettings(someBuffer,field,value);
+        		sendRequestedPageToClient(idField,someBuffer,strlen(someBuffer));
+        	}
+        }
+//        	else if(strncmp(token,codetxt_to_ramtxt(get_toggle_digitalOut),strlen(codetxt_to_ramtxt(get_toggle_digitalOut)))==0)
+//        {
+//            extractQueryFieldValue(token,field,value);
+//            //GET /digital_outputs/toggle?pin=dout1&852
+//            //field -> pin
+//            //value -> dout1
+//            if(value!=NULL)
+//            {
+//                char stateOfPin=toggleOutput(value);
+//                tempPinState[0]=stateOfPin+48;
+//                strcpy(someBuffer,tempPinState);
+//                sendRequestedPageToClient(idField,someBuffer,strlen(someBuffer));
+//            }
+//        }
+//        //adam
+//        else if(strncmp(token,codetxt_to_ramtxt(get_status_dig_out),strlen(codetxt_to_ramtxt(get_status_dig_out)))==0) { //index page requested?
+//        	GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
+//        	composeDigitalOutStatus(someBuffer);
+//            sendRequestedPageToClient(idField,someBuffer,strlen(someBuffer));
+//        }
 //        else if(strncmp(token,codetxt_to_ramtxt(get_status_dig_in),strlen(codetxt_to_ramtxt(get_status_dig_in)))==0){
 //            composeDigitalInStatus(someBuffer);
 //            sendRequestedPageToClientRam(idField,someBuffer,strlen(someBuffer));
@@ -2852,10 +2921,12 @@ void extractQueryFieldValue(char *someString, char* field, char* value)
     if (queryStr != NULL) {
         queryStr++;//pin=dout1&234234
     }
+    //=&
     ptr=strtok(queryStr,"=&");
     if(ptr!=NULL)
     {
         strcpy(field,ptr);
+        //=&
         ptr=strtok(NULL,"=&");
     }
     if(ptr!=NULL)
@@ -2878,6 +2949,25 @@ void composeDigitalOutStatus(char* str)
 //    strcat(str,pinStatus);
     strcat(str,codetxt_to_ramtxt("}}}"));
 }
+void composeKettleStatus(char* str)
+{
+
+	//float temp=90.2;
+	//uint8_t setting;
+	//float currTemp;
+	//char is_heating[5];
+
+	//{"{\"alarm\":\"12:00\",\"hold\":\"15:15\",\"temp\":90.2,\"setting\":0,\"curr_temp\":25.5,\"is_connected\":true,\"is_heating\":false}"};
+//	char pinStatus[5]={0x00};
+//    strcpy(str,codetxt_to_ramtxt("{\"digital_outputs\":{\"dout1\":{\"state\":"));
+//    strcpy(str,codetxt_to_ramtxt("{\"alarm\":\""));
+//    //pinStatus[0]=digital_out_1+48;
+//    strcat(str,alarm);
+//    strcpy(str,codetxt_to_ramtxt("\",\"hold\":\""));
+//    strcat(str,hold);
+//    strcpy(str,codetxt_to_ramtxt("\"}"));
+	sprintf(str,"{\"alarm\":\"%s\",\"hold\":\"%s\",\"temp\":%.1f,\"setting\":%d,\"curr_temp\":%.1f,\"is_connected\":%s,\"is_heating\":%s}", alarm,hold,temp,setting,currTemp,is_connected,is_heating);
+}
 
 //to be called for sending some page
 void sendRequestedPageToClient(char id, const char* page,unsigned int len)
@@ -2888,6 +2978,7 @@ void sendRequestedPageToClient(char id, const char* page,unsigned int len)
     unsigned int lenOfPacketToTx2=0;
     char tempEspStatus;
     char tempStr[2]={0};
+    int timer=0; //time init 0s
     //char lenBuf[7];
     while(len>0)
     {
@@ -2932,26 +3023,44 @@ void sendRequestedPageToClient(char id, const char* page,unsigned int len)
         strcat(atCommandArray,"\r\n");
 
         bufferIndexForResponseSearch=bufferIndexPrimary;
+        GPIO_SetBits(GPIOD, GPIO_Pin_12);
         sendUARTmsg(atCommandArray);
 
         while(1)
         {
+        	if(TIM_GetFlagStatus(TIM5, TIM_FLAG_Update)) {
+        		timer++;
+        		if(timer == 3)
+        		{
+        			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+        			GPIO_ResetBits(GPIOD, GPIO_Pin_13);
+        			GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+        			GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+        			break;
+        		}
+        		TIM_ClearFlag(TIM5, TIM_FLAG_Update);
+        	}
             tempEspStatus=readEspResponse();
             if(tempEspStatus==READY_TO_WRITE_TCP||tempEspStatus==ERROR ||tempEspStatus==FAIL)
                 break;
         }
+
         //now send page
         if(tempEspStatus==READY_TO_WRITE_TCP)
         {
+        	GPIO_ResetBits(GPIOD, GPIO_Pin_12);
         	 //sendUARTmsg(page);
             sendMemArrayToEsp(page+pageToSendAddress,lenOfPacketToTx2);
             do{
                 tempEspStatus=readEspResponse();
+                GPIO_SetBits(GPIOD, GPIO_Pin_14);
             }
             while(tempEspStatus==UNKNOWN);
-            if(tempEspStatus!=OK)//link broken, don't send more data to this link.
-                break;
-            pageToSendAddress+=lenOfPacketToTx;
+            if(tempEspStatus!=OK) {//link broken, don't send more data to this link.
+
+            	break;
+            }
+            pageToSendAddress+=lenOfPacketToTx2;
         }
         else
             break;
@@ -2959,12 +3068,14 @@ void sendRequestedPageToClient(char id, const char* page,unsigned int len)
 
     if(tempEspStatus==OK)
     {
+
         strcpy(atCommandArray,codetxt_to_ramtxt("AT+CIPCLOSE="));
         tempStr[0]=id;
         strcat(atCommandArray,tempStr);
         strcat(atCommandArray,"\r\n");
         sendUARTmsg(atCommandArray);
         while(readEspResponse()==UNKNOWN);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_14);
     }
 
     //AT+CIPCLOSE=ID CRLF
@@ -3263,20 +3374,24 @@ int main(void)
 	setOutPP('D', 14);
 	setOutPP('D', 15);
 
-
+	setupTimerUp5(9999,8399,0x00,0x00);
 	setupUSART(9600);
 	initializeEspAsServer();
 	resetEspRxBuffer();
 
-	
+
 
 	for(;;){
+		setBit('D',12);
+		setBit('D',13);
+		setBit('D',14);
 		setBit('D',15);
 		HandleHttpRequests();
 
 
 
 //		if(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1))
+
 //		{
 //			setBit('D', 12);
 //			resetBit('E', 1);
