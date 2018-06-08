@@ -9,6 +9,8 @@
 */
 
 #include "stm32f4xx.h"
+#include "string.h"
+//#include "stm32f4xx_i2c.h"
 #include "stm32f4_discovery.h"
 #include <math.h>
 #include "string.h"
@@ -1921,7 +1923,7 @@ void setupTimerUp5(int period, int prescaler, uint8_t preemptionpriority, uint8_
 
 	makeNVIC(TIM5_IRQn, preemptionpriority, subpriority);
 
-	TIM_Cmd(TIM5, ENABLE);
+	//TIM_Cmd(TIM5, ENABLE);
 }
 
 void setupTimerUp7(int period, int prescaler, uint8_t preemptionpriority, uint8_t subpriority)
@@ -2488,6 +2490,109 @@ void setupDAC(uint32_t PortSource,uint32_t PinSource, int DACchnum)
 	}
 	//DAC_SetChannel1Data(DAC_Align_12b_R, 0xFFF);
 }
+//void setupI2C(){
+//	// Włączenie zegara I2C
+//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+//	// Włączenie zegara od GPIOB
+//	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+//
+//	// Ustawienie pinów SCL (PB8) i SDA (PB7)
+//	GPIO_InitTypeDef GPIO_InitStruct;
+//	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
+//	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+//	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+//	GPIO_InitStruct.GPIO_OType = GPIO_OType_OD; // Open-drain
+//	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+//	GPIO_Init(GPIOB, &GPIO_InitStruct);
+//
+//	// Połączenie I2C z pinami
+//	GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_I2C1); // SCL
+//	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_I2C1); // SDA
+//
+//	Ustawienie parametrów I2C odbywa się za pomocą struktury I2C_InitTypeDef:
+//
+//	// Ustawienie I2C
+//	I2C_InitTypeDef I2C_InitStruct;
+//	// Predkosc transmisji - 100kHz
+//	I2C_InitStruct.I2C_ClockSpeed = 100000;
+//	// Wybór I2C (inne możliwosci dotyczą SMBUS)
+//	I2C_InitStruct.I2C_Mode = I2C_Mode_I2C;
+//	// Współczynnik wypełnienia 50%
+//	I2C_InitStruct.I2C_DutyCycle = I2C_DutyCycle_2;
+//	// Adres w trybie Slave, pole nieistotne w trybie Master
+//	I2C_InitStruct.I2C_OwnAddress1 = I2C1_SLAVE_ADDRESS7;
+//	// ACK - potwierdzenie odbioru
+//	I2C_InitStruct.I2C_Ack = I2C_Ack_Enable;
+//	// Długosc adresacji urządzeń - 7bitów
+//	I2C_InitStruct.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+//	// init I2C1 - zapisanie ustawień na konkretny numer I2C
+//	I2C_Init(I2C1, &I2C_InitStruct);
+//
+//	// Włączenie I2C1
+//	I2C_Cmd(I2C1, ENABLE);
+//
+//
+//}
+//
+//
+///* I2Cx --> w naszym pzypadku I2C1
+// * address --> 7-bitowy adres urzadzenia
+// * direction --> kierunek transmisji danych:
+// * I2C_Direction_Tranmitter dla transmisji danych z urzadzenia Master
+// * I2C_Direction_Receiver dla odbioru danych przez urządzenie Master
+// */
+//void I2C_start(I2C_TypeDef* I2Cx, uint8_t address, uint8_t direction) {
+//	// Oczekiwanie na zwolnienie magistrali I2C, żeby nie powodować kolizji
+//	while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY));
+//
+//	// Wygenerowanie sygnału START
+//	I2C_GenerateSTART(I2Cx, ENABLE);
+//
+//	// Oczekiwanie na potwierdzenie od Slave'a, że odebrał sygnał START
+//	while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT));
+//
+//	// Adresacja urządzenia Slave i wybór kierunku transmisji danych
+//	I2C_Send7bitAddress(I2Cx, address, direction);
+//
+//	// Oczekiwanie na potwierdzenie kierunku transmisji
+//	if (direction == I2C_Direction_Transmitter) {
+//		while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+//	} else if (direction == I2C_Direction_Receiver) {
+//		while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));
+//	}
+//}
+//
+//
+///* Zakończenie transmisji i zwolnienie magistrali */
+//void I2C_stop(I2C_TypeDef* I2Cx) {
+//	// Wygenerowanie sygnału STOP
+//	I2C_GenerateSTOP(I2Cx, ENABLE);
+//}
+//
+//
+///* Wysyłanie danych po I2C */
+//void I2C_write(I2C_TypeDef* I2Cx, uint8_t data) {
+//	I2C_SendData(I2Cx, data);
+//	// Oczekiwanie na zakończenie transmisji
+//	while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+//}
+//
+//
+///* Funkcja odbierająca 1 bajt danych oraz w zależnosci od parametru ACK:
+// * - jeżeli ENABLE -> potwierdzająca odbiór (oznacza chęć odbioru jeszcze 1 bajtu)
+// * - jeżeli DISABLE -> NIE potwierdzająca odbioru (zakończenie odczytu)*/
+//uint8_t I2C_read(I2C_TypeDef* I2Cx, uint8_t ACK) {
+//// Włączenie/Wyłączenie potwierdzenia odbioru
+//	I2C_AcknowledgeConfig(I2Cx, ACK);
+//	// Oczekiwania aż odebranie bajtu danych zostanie zakończone
+//	while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED));
+//	// Odczyt odebranych danych z I2C
+//	uint8_t data = I2C_ReceiveData(I2Cx);
+//	return data;
+//}
+
+
+
 
 void setupUSART(uint32_t baud)
 {
@@ -3028,6 +3133,7 @@ void sendRequestedPageToClient(char id, const char* page,unsigned int len)
 
         while(1)
         {
+        	TIM_Cmd(TIM5,ENABLE);
         	if(TIM_GetFlagStatus(TIM5, TIM_FLAG_Update)) {
         		timer++;
         		if(timer == 3)
@@ -3041,8 +3147,10 @@ void sendRequestedPageToClient(char id, const char* page,unsigned int len)
         		TIM_ClearFlag(TIM5, TIM_FLAG_Update);
         	}
             tempEspStatus=readEspResponse();
-            if(tempEspStatus==READY_TO_WRITE_TCP||tempEspStatus==ERROR ||tempEspStatus==FAIL)
+            if(tempEspStatus==READY_TO_WRITE_TCP||tempEspStatus==ERROR ||tempEspStatus==FAIL){
+            	TIM_Cmd(TIM5,DISABLE); //important
                 break;
+            }
         }
 
         //now send page
@@ -3376,8 +3484,15 @@ int main(void)
 
 	setupTimerUp5(9999,8399,0x00,0x00);
 	setupUSART(9600);
-	initializeEspAsServer();
-	resetEspRxBuffer();
+	//setupI2C();
+	//initializeEspAsServer();
+	//resetEspRxBuffer();
+
+	// Rozpoczecie transmisji z uC do czujnika
+	//I2C_start(I2C1, MCP9800_ADDRESS, I2C_Direction_Transmitter);
+	//I2C_write(I2C1, 0x00); // Podanie rejestru, z ktorego nastapi odczyt
+	// Zakonczenie transmisji
+	//I2C_stop(I2C1);
 
 
 
