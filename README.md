@@ -155,7 +155,8 @@ ESP8266-01
     <td>-</td>
   </tr>
 </table>
-**important notices:**
+
+<b>important notices:</b>
 Use your own ssid, password and ip address to network connection.
 
 
