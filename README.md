@@ -1,13 +1,20 @@
 # KettleIoT
 ## Overview
-
+Smart kettle whose approach to boil water will never let you down.
 ## Description
+Kettle like this can be handled remotely through website. There are a few parameters that are provided to set: temperature, alarm, heat holding time and one of two modes of work you are obligated to chose:
+First one enables to boil water and then keeps temperature at given value. The second one simply allows to hold temperature.
 
+The base of the kettle has a diode which changes color ranging from red to green if kettle is placed on it, otherwise color turns blue.
+
+When temperature reach a proper value the buzzer is activated.
 ## Tools
 
-FT232 USB UART Board (Type A)
+FT232 USB UART Board (Type A) - for testing correct output of certain modules
 
 ESP8266-01
+
+
 
 ## How to run
 
@@ -45,7 +52,7 @@ ESP8266-01
   </tr>
   <tr align="center">
     <td>RTS</td>
-     <td rowspan="2" colspan="2">connection between pins</td>
+     <td rowspan="2" colspan="2">connected</td>
   </tr>
   <tr align="center">
     <td>CH_PD</td>
@@ -92,7 +99,7 @@ ESP8266-01
   </tr>
   <tr align="center">
     <td>RTS</td>
-    <td rowspan="2" colspan="2">connection between pins</td>
+    <td rowspan="2" colspan="2">connected</td>
   </tr>
   <tr align="center">
     <td>CH_PD</td>
@@ -134,7 +141,7 @@ ESP8266-01
   </tr>
   <tr align="center">
     <td>RTS</td>
-    <td rowspan="2">connection between pins</td>
+    <td rowspan="2">connected</td>
   </tr>
   <tr align="center">
     <td>CH_PD</td>
@@ -148,13 +155,16 @@ ESP8266-01
     <td>-</td>
   </tr>
 </table>
+**important notices:**
+Use your own ssid, password and ip address to network connection.
+
 
 ## How to compile
 - System Workbench for STM32
 ## Future improvements
-
+Add more precise external RTC
 ## Attributions
-
+[Source of external libraries](https://github.com/MaJerle/stm32fxxx_hal_libraries)
 ## License
 Distributed under **MIT** license
 ## Credits
