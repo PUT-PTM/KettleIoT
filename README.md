@@ -156,6 +156,26 @@ ESP8266-01
   </tr>
 </table>
 
+- Pins for Relay:
+<table>
+ <tr align="center">
+    <th>RelayModule</th>
+    <th>STM32F4</th>
+ </tr>
+ <tr align="center">
+    <td>VCC</td>
+    <td>5V</td>
+  </tr>
+  <tr align="center">
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+  <tr align="center">
+    <td>INPUT</td>
+    <td>PE1</td>
+  </tr>
+</table>
+
 <b>important notices:</b>
 Use your own ssid, password and ip address to network connection.
 
