@@ -156,7 +156,7 @@ ESP8266-01
   </tr>
 </table>
 
-- Pins for Relay:
+- RelayModule pins
 <table>
  <tr align="center">
     <th>RelayModule</th>
@@ -171,10 +171,75 @@ ESP8266-01
     <td>GND</td>
   </tr>
   <tr align="center">
-    <td>INPUT</td>
+    <td>IN1</td>
     <td>PE1</td>
   </tr>
 </table>
+
+- RGB LED pins
+<table>
+ <tr align="center">
+    <th>RGB LED</th>
+    <th>STM32F4</th>
+ </tr>
+ <tr align="center">
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+  <tr align="center">
+    <td>R</td>
+    <td>PC8</td>
+  </tr>
+  <tr align="center">
+    <td>G</td>
+    <td>PC9</td>
+  </tr>
+  <tr align="center">
+    <td>B</td>
+    <td>PC7</td>
+  </tr>
+</table>
+
+- Buzzer pins
+<table>
+ <tr align="center">
+    <th>Buzzer</th>
+    <th>STM32F4</th>
+ </tr>
+ <tr align="center">
+    <td>VCC</td>
+    <td>5V</td>
+  </tr>
+  <tr align="center">
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+  <tr align="center">
+    <td>IN1</td>
+    <td>PE2</td>
+  </tr>
+</table>
+
+- DS18B20 pins
+<table>
+ <tr align="center">
+    <th>DS18B20</th>
+    <th>STM32F4</th>
+ </tr>
+ <tr align="center">
+    <td>VCC</td>
+    <td>3.3V</td>
+  </tr>
+  <tr align="center">
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+  <tr align="center">
+    <td>Signal</td>
+    <td>PD0</td>
+  </tr>
+</table>
+
 
 <b>important notices:</b>
 Use your own ssid, password and ip address to network connection.
