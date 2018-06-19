@@ -133,7 +133,7 @@
 #define __Vendor_SysTickConfig    0       /*!< Set to 1 if different SysTick Config is used  */
 
 #if !defined  (__FPU_PRESENT) 
-  #define __FPU_PRESENT             1       /*!< FPU present                                   */
+  #define __FPU_PRESENT             0       /*!< FPU present                                   */
 #endif /* __FPU_PRESENT */
 
  
